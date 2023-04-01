@@ -14,10 +14,11 @@ class UserAdmin(BaseUserAdmin):
     list_display = ['email', 'name']
     fieldsets = (
         (None, {'fields':('email', 'password')}),
+        (_('Personal Info'), {'fields':('name',)}),
         (
             _('Permissions'),
             {
-                'fields':(
+                'fields': (
                     'is_active',
                     'is_staff', 
                     'is_superuser',
@@ -31,8 +32,8 @@ class UserAdmin(BaseUserAdmin):
     readonly_fields=['last_login']
     add_fieldsets = (
         (None, {
-            'classes':('wide',),
-            'fields':(
+            'classes': ('wide',),
+            'fields': (
                 'email',
                 'password1',
                 'password2',
@@ -40,7 +41,7 @@ class UserAdmin(BaseUserAdmin):
                 'is_active',
                 'is_staff',
                 'is_superuser',
-            )
+            ),
         }),
     )
 
