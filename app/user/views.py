@@ -36,5 +36,3 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
         """Retrieve and return authenticated user."""
         return self.request.user
 
-
-
