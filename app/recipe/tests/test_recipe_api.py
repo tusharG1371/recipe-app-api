@@ -1,7 +1,6 @@
 """
 Test for Recipe APIs.
 """
-
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -11,9 +10,16 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from core.models import Recipe
-from recipe.serializers import RecipeSerializer
+from recipe.serializers import (
+    RecipeSerializer,
+    RecipeDetailSerializer,
+)
 
 RECIPE_URL = reverse('recipe:recipe-list')
+
+def detail_url(recipe_id):
+    """Create and return a recipe detail URL."""
+    return reverse('recipe:recipe-detail', args=[recipe_id])
 
 def create_recipe(user, **params):
     """Create and return a sample recipe"""
@@ -25,7 +31,7 @@ def create_recipe(user, **params):
         'link':'https://example.com/recipe.pdf'
     }
     defaults.update(params)
-    recipe = Recipe.create(user=user, **defaults)
+    recipe = Recipe.objects.create(user=user, **defaults)
     return recipe
 
 
@@ -50,7 +56,7 @@ class PrivateRecipeAPITest(TestCase):
             'test@example.com',
             'testpass123',
         )
-        self.client.force_authenticate(user=self.user)
+        self.client.force_authenticate(self.user)
 
     def test_retrieving_recipies(self):
         """Test retrieving a list of recipies."""
@@ -72,17 +78,49 @@ class PrivateRecipeAPITest(TestCase):
         create_recipe(user=other_user)
         create_recipe(user=self.user)
         res = self.client.get(RECIPE_URL)
-        recipies = Recipe.objects.filter(user=self.user)
+        recipes = Recipe.objects.filter(user=self.user)
         serializer = RecipeSerializer(recipes, many=True)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
-
-
         res = self.client.get(RECIPE_URL)
         recipes = Recipe.objects.filter(user=self.user)
         serializer = RecipeSerializer(recipes, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
-        
+    
+    def test_get_recipe_detail(self):
+        """Test get recipe detail."""
+        recipe = create_recipe(user=self.user)
+        url = detail_url(recipe.id)
+        res = self.client.get(url)
+
+        serializer = RecipeDetailSerializer(recipe)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+    
+    def test_create_recipe(self):
+        """Test creating a recipe."""
+        payload = {
+            'title': 'Sample Recipe',
+            'time_minutes': 30,
+            'price': Decimal('5.99')
+        }
+        res = self.client.post(RECIPE_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.get(id=res['id'])
+        for k,v in payload.items():
+                self.assertEqual(getattr(recipe, k), v)
+        self.assertEqual(recipe.user, self.user)
+
+    def partial_update(self):
+        """Test partial update of a recipe."""
+        original_link = ''
+        recipe = create_recipe(
+            user = self.user,
+            title = 'Sample recipe title'
+        )
+    
+
+
