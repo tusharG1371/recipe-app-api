@@ -155,7 +155,7 @@ class PrivateRecipeAPITest(TestCase):
             'price': Decimal('8.99')
         }
         url = detail_url(recipe.id)
-        res = self.client.patch(url, payload)
+        res = self.client.put(url, payload)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         recipe.refresh_from_db()
         for k, v in payload.items():
@@ -187,5 +187,26 @@ class PrivateRecipeAPITest(TestCase):
         res = self.client.delete(url)
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
         self.assertTrue(Recipe.objects.filter(id=recipe.id).exists())
+
+    def test_create_recipe_with_new_tags(self):
+        """Test creating a recipe with new tags."""
+        pass
+
+    def test_create_recipe_with_existing_tags(self):
+        """Test creating a recipe with existing tags."""
+        pass
+    
+    def test_create_tag_on_update(self):
+        """Test create tag when updating a recipe."""
+        pass
+
+    def test_update_recipe_assign_tag(self):
+        """Test assigning an existing tag when updating a recipe."""
+        pass
+
+    def test_clear_recipe_tags(self):
+        """Test clearing a recipe tag."""
+        pass
+
 
 

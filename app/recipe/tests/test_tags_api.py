@@ -31,7 +31,7 @@ class PublicTagsApiTests(TestCase):
         self.client = APIClient()
 
     def test_auth_required(self):
-        """Test auth is required for accessing tags."""
+        """Test auth is required for retrieving tags."""
         res = self.client.get(TAGS_URL)
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -39,8 +39,8 @@ class PrivateTagsApiTests(TestCase):
     """Test authenticated API requests."""
 
     def setUp(self):
-        self.client = APIClient()
         self.user = create_user()
+        self.client = APIClient()
         self.client.force_authenticate(self.user)
 
     def test_retrieve_tags(self):
@@ -56,7 +56,7 @@ class PrivateTagsApiTests(TestCase):
     def test_tags_limited_to_user(self):
         """Test list of tags is limited to authenitcated users."""
         user2 = create_user(email='test2@example.com', password='test_12343')
-        Tag.objects.create(user=self.user, name='Tag1')
+        tag = Tag.objects.create(user=self.user, name='Tag1')
         Tag.objects.create(user=user2, name='Tag2')
 
         res = self.client.get(TAGS_URL)
@@ -64,7 +64,10 @@ class PrivateTagsApiTests(TestCase):
         tags = Tag.objects.filter(user = self.user).order_by('-name')
         serializer = TagSerializer(tags, many=True)
 
-        self.assertEqual(res.data, serializer.data)
+        self.assertEqual(len(res.data),1)
+        self.assertEqual(res.data[0]['name'], tag.name)
+        self.assertEqual(res.data[0]['id'], tag.id)
+
 
     def test_update_tag(self):
         """Test update a tag."""
@@ -83,14 +86,3 @@ class PrivateTagsApiTests(TestCase):
         res = self.client.delete(url)
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Tag.objects.filter(id=tag.id).exists())
-
-
-
-    
-
-
-
-
-    
-
-
