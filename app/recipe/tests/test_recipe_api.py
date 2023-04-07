@@ -9,7 +9,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Recipe
+from core.models import Recipe, Tag
 
 from recipe.serializers import (
     RecipeSerializer,
@@ -190,11 +190,43 @@ class PrivateRecipeAPITest(TestCase):
 
     def test_create_recipe_with_new_tags(self):
         """Test creating a recipe with new tags."""
-        pass
+        payload = {
+            'title': 'Sample Recipe Title',
+            'description': 'Sample Recipe Description',
+            'time_minutes': 15,
+            'price': Decimal('5.99'),
+            'tags':[{'name':'tag1'}, {'name':'tag2'}]
+        }
+        res = self.client.post(RECIPES_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipes = Recipe.objects.filter(user=self.user)
+        self.assertEqual(recipes.count(), 1)
+        recipe = recipes[0]
+        self.assertEqual(recipe.tags.count(), 2)
+        for tag in payload['tags']:
+            self.assertTrue(recipe.tags.filter(name=tag['name'], user=self.user).exists())
+        
 
     def test_create_recipe_with_existing_tags(self):
         """Test creating a recipe with existing tags."""
-        pass
+        tag_indian = Tag.object.create(user=self.user, name='indian')
+        payload = {
+            'title': 'pongal',
+            'time_minutes': 15,
+            'price': Decimal('6.99'),
+            'tags':[{'name':'indian'}, {'name':'breakfast'}]
+        }
+        res = self.client.post(RECIPES_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipies = Recipe.objects.filter(user=self.user)
+        self.assertEqual(recipies.count(), 1)
+        recipe = recipies[0]
+        self.assertEqual(recipe.tags.count(), 2)
+        self.assertIn(tag_indian, recipe.tags.all())
+        for tag in payload['tags']:
+            exists = recipe.tags.filter(name=tag['name'], user=self.user).exists()
+            self.assertTrue(exists)
+
     
     def test_create_tag_on_update(self):
         """Test create tag when updating a recipe."""
