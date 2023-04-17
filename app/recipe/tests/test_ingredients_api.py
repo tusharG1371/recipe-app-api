@@ -86,8 +86,9 @@ class PrivateIngredientApiTests(TestCase):
             url = detail_url(ingredient.id)
             res = self.client.delete(url)
 
-            self.assertEqual(res.status_code, status.HTTP_200_OK)
-            self.assertFalse(Ingredient.objects.filter(id=ingredient.id).exists())
+            self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+            ingredients = Ingredient.objects.filter(user=self.user)
+            self.assertFalse(ingredients.exists())
 
 
         
